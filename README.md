@@ -1,4 +1,4 @@
-# izneo-get
+# cafeyn-get
 Ce script permet de récupérer un journal ou un magazine présent sur https://www.cafeyn.co dans la limite des capacités de notre compte existant.
 
 Le but est de pouvoir lire un journal ou un magazine sur un support non compatible avec les applications fournies par Cafeyn. 
