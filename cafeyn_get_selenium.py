@@ -1,6 +1,14 @@
+# -*- coding: utf-8 -*-
+__version__ = "0.02.0"
+"""
+Source : https://github.com/izneo-get/cafeyn-get
+
+Ce script permet de récupérer un journal ou un magazine présent sur https://www.cafeyn.co dans la limite des capacités de notre compte existant.
+"""
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
+import argparse
 import configparser
 import re
 import sys
@@ -11,6 +19,7 @@ from PIL import Image, ImageOps
 import base64
 import time
 import img2pdf
+import shutil
 
 
 def get_file_content_chrome(driver, uri):
@@ -53,10 +62,67 @@ def clean_name(name):
     name = re.sub(r"\.+$", "", name)
     return name
 
+def is_only_white(im):
+    """Permet de supprimer les bords blancs. 
+
+    Parameters
+    ----------
+    im : Image
+        L'image que l'on souhaite traiter.
+
+    Returns
+    -------
+    Image
+        L'image sans les bords blancs.
+    """
+    tmp_im = im.convert("RGB")
+    tmp_im = ImageOps.invert(tmp_im)
+    bbox = tmp_im.getbbox()
+    if not bbox:
+        return True
+    else:
+        return False
 
 if __name__ == "__main__":
-    to_pdf = True
-    output_format = "jpg"
+    
+    # Parse des arguments passés en ligne de commande.
+    parser = argparse.ArgumentParser(
+        description="""Ce script permet de récupérer un journal ou un magazine présent sur https://www.cafeyn.co dans la limite des capacités de notre compte existant."""
+    )
+    parser.add_argument(
+        "--no-pdf",
+        action="store_true",
+        default=False,
+        help="Ne génère pas de PDF.",
+    )
+    parser.add_argument(
+        "--no-clean",
+        action="store_true",
+        default=False,
+        help="Ne supprime pas le répertoire temporaire dans le cas où un PDF a été généré.",
+    )
+    parser.add_argument(
+        "--image-format",
+        "-f",
+        choices={"png", "jpg"},
+        type=str,
+        default="jpg",
+        help="Format des images.",
+    )
+    parser.add_argument(
+        "--output-folder",
+        "-o",
+        type=str,
+        default=None,
+        help="Répertoire racine de téléchargement",
+    )
+
+    args = parser.parse_args()
+
+    to_pdf = not args.no_pdf
+    no_clean = args.no_clean
+    output_format = args.image_format
+
     config = configparser.ConfigParser()
     config_file = re.sub(r"(.+)\.(.+)", r"\1", sys.argv[0]) + ".ini"
     prefered_driver = "./bin/chromedriver.exe"
@@ -75,7 +141,7 @@ if __name__ == "__main__":
     except:
         # Ce driver n'est pas compatible.
         print(f'Impossible de se connecter avec le driver "{chrome_driver}"')
-        for filename in glob.iglob("./bin/chromedriver*.exe", recursive=True):
+        for filename in glob.iglob("./**/chromedriver*.exe", recursive=True):
             chrome_driver = filename
             try:
                 driver = webdriver.Chrome(chrome_driver, options=chrome_options)
@@ -97,7 +163,10 @@ if __name__ == "__main__":
         + ")"
     )
 
-    output_folder = clean_name("DOWNLOADS")
+    output_folder = os.path.dirname(os.path.abspath(sys.argv[0])) + "/DOWNLOADS"
+    if args.output_folder:
+        output_folder = args.output_folder
+    
     if not os.path.exists(output_folder):
         os.mkdir(output_folder)
 
@@ -133,22 +202,25 @@ if __name__ == "__main__":
                         attempts = attempts - 1
                         continue
                     bytes = get_file_content_chrome(driver, blob_url)
-                    if len(bytes) > 50000:
-                        loaded = True
-                    else:
-                        print("Waiting...")
-                        attempts = attempts - 1
-                        time.sleep(1)
+                    if len(bytes) > 20000:
+                        im = Image.open(BytesIO(bytes))
+                        # Pour vérifier si ce n'est pas une image entièrement blanche, on la crop.
+                        if not is_only_white(im):
+                            loaded = True
                 if loaded:
-                    im = Image.open(BytesIO(bytes))
                     filename = ("00000" + parent_element.replace("canvas", ""))[-3:]
                     if output_format == 'jpg':
+                        im = im.convert("RGB")
                         im.save(f"{save_path}/{filename}.{output_format}", quality=95)
                     else:
                         im.save(f"{save_path}/{filename}.{output_format}")
                     pages_done.append(parent_element)
                     new_pages = new_pages + 1
                     driver.execute_script(f"URL.revokeObjectURL('{blob_url}');")
+                else:
+                    print("Waiting")
+                    attempts = attempts - 1
+                    time.sleep(1)
         if new_pages == 0:
             termine = termine + 1
         else:
@@ -171,4 +243,8 @@ if __name__ == "__main__":
                     continue
                 imgs.append(path)
             f.write(img2pdf.convert(imgs))
+
+        if not no_clean:
+            shutil.rmtree(save_path)
         print("OK")
+        
