@@ -2,7 +2,10 @@
 
 ## cafeyn_get.py 
 
-### Version 0.01.0 (2020-10-06)
+### Version 0.02.0 (2020-10-08)
+- [NEW] Utilisation de la date de sortie de la publication dans le nom du fichier. 
+
+### Version 0.01.0 (2020-10-08)
 - [NEW] Version initiale. 
 - [NEW] Récupération des PDF en direct. 
 

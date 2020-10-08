@@ -1,4 +1,28 @@
 # -*- coding: utf-8 -*-
+__version__ = "0.02.0"
+"""
+Source : https://github.com/izneo-get/izneo-get
+
+usage: cafeyn_get.py [-h] [--no-clean] [--output-folder OUTPUT_FOLDER]
+                     [--config CONFIG] [--user-agent USER_AGENT]
+                     url
+
+Script pour sauvegarder une publication Cafeyn.
+
+positional arguments:
+  url                   L'URL de la publication à récupérer ou le chemin vers
+                        un fichier local contenant une liste d'URLs
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --no-clean            Ne supprime pas le répertoire temporaire dans le cas
+                        où un PDF a été généré
+  --output-folder OUTPUT_FOLDER, -o OUTPUT_FOLDER
+                        Répertoire racine de téléchargement
+  --config CONFIG       Fichier de configuration
+  --user-agent USER_AGENT
+                        User agent à utiliser
+"""
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -78,7 +102,7 @@ if __name__ == "__main__":
         "--no-clean",
         action="store_true",
         default=False,
-        help="Ne supprime pas le répertoire temporaire dans le cas où un PDF a été généré.",
+        help="Ne supprime pas le répertoire temporaire dans le cas où un PDF a été généré",
     )
     parser.add_argument(
         "--output-folder",
@@ -210,6 +234,11 @@ if __name__ == "__main__":
             break
         title = clean_name(mag_infos['title'])
         issueNumber = clean_name(str(mag_infos['issueNumber']))
+        releaseDate = clean_name(str(mag_infos['releaseDate']))
+        if len(releaseDate) > 10:
+            releaseDate = ' (' + releaseDate[0:10] + ')'
+        else:
+            releaseDate = ''
         page_str = ('000' + page)[-3:]
         # f = open(f"{title} {issueNumber} - {page_str}.bin", "wb")
         # f.write(r.content)
@@ -243,7 +272,7 @@ if __name__ == "__main__":
     merger = PdfFileMerger()
     for pdf in pdfs:
         merger.append(pdf)
-    merger.write(output_folder + "/" + clean_name(title + ' ' + issueNumber) + ".pdf")
+    merger.write(output_folder + "/" + clean_name(title + ' ' + issueNumber + releaseDate) + ".pdf")
     merger.close()
 
     if not no_clean:
