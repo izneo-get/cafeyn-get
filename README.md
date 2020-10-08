@@ -7,6 +7,55 @@ Il est évident que les fichiers ne doivent en aucun cas être conservées une f
 
 ## Utilisation
 
+### cafeyn_get
+**Utilisation**  
+```
+python cafeyn_get.py [-h] [--no-clean] [--output-folder OUTPUT_FOLDER]
+                     [--config CONFIG] [--user-agent USER_AGENT]
+                     url
+
+Script pour sauvegarder une publication Cafeyn.
+
+positional arguments:
+  url                   L'URL de la publication à récupérer ou le chemin vers
+                        un fichier local contenant une liste d'URLs
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --no-clean            Ne supprime pas le répertoire temporaire dans le cas
+                        où un PDF a été généré.
+  --output-folder OUTPUT_FOLDER, -o OUTPUT_FOLDER
+                        Répertoire racine de téléchargement
+  --config CONFIG       Fichier de configuration
+  --user-agent USER_AGENT
+                        User agent à utiliser
+```
+
+- L'URL doit ressembler à :
+```
+https://reader.cafeyn.co/fr/{identifiant_numero}/{identifiant_journal}
+``` 
+
+- Il est impératif d'avoir un fichier de configuration "cafeyn_get.cfg" dans lequel les 3 variables de cookies sont renseignées : 
+```
+cafeyn_authtoken = ...
+cafeyn_webSessionId = ...
+cafeyn_userGroup = ...
+```
+Pour les obtenir, identifiez vous sur https://www.cafeyn.co et recherchez vos cookies avec votre navigateur web.
+
+#### Chrome  
+Menu --> Plus d'outils --> Outils de développements  
+Application / Storage / Cookies  
+et recherchez le cookie "https://reader.cafeyn.co".  
+
+
+#### Firefox  
+Menu --> Developpement web --> Inspecteur de stockage --> Cookies  
+et recherchez le cookie "https://reader.cafeyn.co".  
+
+
+
 ### cafeyn_get_selenium
 **Utilisation**  
 - Il faut tout d'abord lancer un navigateur Chrome en mode "debug". 
