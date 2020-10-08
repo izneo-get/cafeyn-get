@@ -1,5 +1,12 @@
 # Changelog
 
+## cafeyn_get.py 
+
+### Version 0.01.0 (2020-10-06)
+- [NEW] Version initiale. 
+- [NEW] Récupération des PDF en direct. 
+
+
 ## cafeyn_get_selenium.py 
 
 ### Version 0.01.0 (2020-10-06)
