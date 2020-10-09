@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = "0.03.0"
+__version__ = "0.03.1"
 """
 Source : https://github.com/izneo-get/izneo-get
 
@@ -45,6 +45,8 @@ import base64
 from datetime import datetime
 import math
 from PyPDF2 import PdfFileMerger
+import os.path
+from os import path
 
 def requests_retry_session(
     retries=3,
@@ -118,9 +120,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--user-agent", type=str, default=None, help="User agent à utiliser"
     )
+    parser.add_argument(
+        "--force", action="store_true", default=False, help="Ne demande pas la confirmation d'écrasement de fichier"
+    )
 
     args = parser.parse_args()
     no_clean = args.no_clean
+    force_overwrite = args.force
 
 
     # Lecture de la config.
@@ -159,10 +165,10 @@ if __name__ == "__main__":
 
     base_url = args.url
     while base_url.upper() != "Q" and not re.match("https://reader.cafeyn.co/fr/(.+?)/(.+?)", base_url):
-        base_url = input("URL de la publication au format \"https://reader.cafeyn.co/fr/{publicationId}/{issueId}\" (\"Q\" pour quitter)) :")
+        base_url = input("URL de la publication au format \"https://reader.cafeyn.co/fr/{publicationId}/{issueId}\" (\"Q\" pour quitter) : ")
 
     if base_url.upper() == "Q":
-        sys.exit("Sortie demandée")
+        sys.exit()
 
     if not cafeyn_authtoken or not cafeyn_webSessionId or not cafeyn_userGroup:
         print("[ERREUR] Impossible de trouver les valeurs dans la configuration.")
@@ -213,6 +219,9 @@ if __name__ == "__main__":
         )
     mag_infos = json.loads(r.text)['result']
 
+    if mag_infos['isPurchased'] == False:
+        print("[WARNING] Cette publication n'est pas disponible dans votre abonnement. Vous n'aurez que les pages gratuites. ")
+
     enc_session_key = base64.b64decode(mag_infos['baseValue'])
 
     priv_key = RSA.import_key(open('privatekey.pkcs8').read())
@@ -225,6 +234,25 @@ if __name__ == "__main__":
     a = (hex(e)[2:].upper() + '00000000000')[0:10]
     key = b + cipher_dec.decode() + a
     
+    title = clean_name(mag_infos['title'])
+    issueNumber = clean_name(str(mag_infos['issueNumber']))
+    releaseDate = clean_name(str(mag_infos['releaseDate']))
+    if len(releaseDate) > 10:
+        releaseDate = ' (' + releaseDate[0:10] + ')'
+    else:
+        releaseDate = ''
+
+    full_pdf_path = output_folder + "/" + clean_name(title + ' ' + issueNumber + releaseDate) + ".pdf"
+
+    answer = ""
+    if force_overwrite:
+        answer = "O"
+    while path.exists(full_pdf_path) and answer not in ["O", "Y", "N", "Q"]:
+        answer = input(f"Le fichier de destination \"{full_pdf_path}\" existe déjà. Voulez-vous l'écraser ? [O]ui / [N]on : ").upper()
+
+    if answer.upper() in ["N", "Q"]:
+        sys.exit()
+
     done = 0
     total = len(mag_infos['signedUrls'])
     print(f"[{done} / {total}]", end="\r", flush=True)
@@ -238,13 +266,6 @@ if __name__ == "__main__":
         if r.status_code != 200:
             print(f"Impossible de récupérer la page {page}")
             break
-        title = clean_name(mag_infos['title'])
-        issueNumber = clean_name(str(mag_infos['issueNumber']))
-        releaseDate = clean_name(str(mag_infos['releaseDate']))
-        if len(releaseDate) > 10:
-            releaseDate = ' (' + releaseDate[0:10] + ')'
-        else:
-            releaseDate = ''
         page_str = ('000' + page)[-3:]
         # f = open(f"{title} {issueNumber} - {page_str}.bin", "wb")
         # f.write(r.content)
@@ -278,7 +299,7 @@ if __name__ == "__main__":
     merger = PdfFileMerger()
     for pdf in pdfs:
         merger.append(pdf)
-    merger.write(output_folder + "/" + clean_name(title + ' ' + issueNumber + releaseDate) + ".pdf")
+    merger.write(full_pdf_path)
     merger.close()
 
     if not no_clean:

@@ -2,8 +2,10 @@
 
 ## cafeyn_get.py 
 
-### Version 0.03.0 (2020-10-09)
+### Version 0.03.1 (2020-10-09)
 - [NEW] Si aucune URL passée en paramètre, on la demande. Cela permet d'exécuter le programme sans passer par une ligne de commande. 
+- [NEW] Avertissement quand la publication n'est pas dans l'abonnement. 
+- [NEW] Alerte si le fichier de destination existe déjà. 
 
 ### Version 0.02.0 (2020-10-08)
 - [NEW] Utilisation de la date de sortie de la publication dans le nom du fichier. 
