@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = "0.02.0"
+__version__ = "0.03.0"
 """
 Source : https://github.com/izneo-get/izneo-get
 
@@ -95,7 +95,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "url",
         type=str,
-        default=None,
+        default="",
+        nargs="?",
         help="L'URL de la publication à récupérer ou le chemin vers un fichier local contenant une liste d'URLs",
     )
     parser.add_argument(
@@ -157,6 +158,11 @@ if __name__ == "__main__":
     cafeyn_userGroup = get_param_or_default(config, "cafeyn_userGroup", "")
 
     base_url = args.url
+    while base_url.upper() != "Q" and not re.match("https://reader.cafeyn.co/fr/(.+?)/(.+?)", base_url):
+        base_url = input("URL de la publication au format \"https://reader.cafeyn.co/fr/{publicationId}/{issueId}\" (\"Q\" pour quitter)) :")
+
+    if base_url.upper() == "Q":
+        sys.exit("Sortie demandée")
 
     if not cafeyn_authtoken or not cafeyn_webSessionId or not cafeyn_userGroup:
         print("[ERREUR] Impossible de trouver les valeurs dans la configuration.")
