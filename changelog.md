@@ -2,6 +2,9 @@
 
 ## cafeyn_get.py 
 
+### Version 0.05.0 (2020-10-18)
+- [NEW] Compatibilité avec les anciennes publications. 
+
 ### Version 0.04.0 (2020-10-18)
 - [CHANGE] Utilisation d'une nouvelle clé RSA à chaque appel. 
 

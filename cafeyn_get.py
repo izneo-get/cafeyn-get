@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = "0.04.0"
+__version__ = "0.05.0"
 """
 Source : https://github.com/izneo-get/izneo-get
 
@@ -234,12 +234,7 @@ if __name__ == "__main__":
     cipher = PKCS1_OAEP.new(priv_key)
     cipher_dec = cipher.decrypt(enc_session_key)
 
-    e = mag_infos["issueId"] * ord('#')
-    t = mag_infos["publicationId"] * ord('*')
-    b = (hex(t)[2:].upper() + '00000000000')[0:10]
-    a = (hex(e)[2:].upper() + '00000000000')[0:10]
-    key = b + cipher_dec.decode() + a
-    
+
     title = clean_name(mag_infos['title'])
     issueNumber = clean_name(str(mag_infos['issueNumber']))
     releaseDate = clean_name(str(mag_infos['releaseDate']))
@@ -280,8 +275,28 @@ if __name__ == "__main__":
         save_path = output_folder + "/" + title + '_' + issueNumber
         if not os.path.exists(save_path):
             os.mkdir(save_path)
-            
-        aes = AES.new(key.encode('utf-8'), AES.MODE_CBC, key[0:16].encode('utf-8'))
+        
+        if re.fullmatch(r"^[0-9a-fA-F]+$", cipher_dec.decode()) is not None:
+            # Nouveau format
+            e = mag_infos["issueId"] * ord('#')
+            t = mag_infos["publicationId"] * ord('*')
+            b = (hex(t)[2:].upper() + '00000000000')[0:10]
+            a = (hex(e)[2:].upper() + '00000000000')[0:10]
+            key = b + cipher_dec.decode() + a
+            iv = key[0:16]
+        else:
+            # Ancien format
+            key = (str(mag_infos["issueId"]) + '-' + page + cipher_dec.decode())[0:16]
+            # iv = ''
+            # for k in key:
+            #     iv = iv + hex(ord(k))[2:]
+            iv = key
+
+        key = key.encode('utf-8')
+        iv = iv.encode('utf-8')
+
+
+        aes = AES.new(key, AES.MODE_CBC, iv)
         #decrypted_content = aes.decrypt(r.content)
         decrypted_content = Padding.unpad(aes.decrypt(r.content), AES.block_size)
 
