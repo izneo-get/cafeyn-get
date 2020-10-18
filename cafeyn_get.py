@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = "0.03.1"
+__version__ = "0.04.0"
 """
 Source : https://github.com/izneo-get/izneo-get
 
@@ -186,9 +186,15 @@ if __name__ == "__main__":
 
     mag_infos_url = f"https://api.lekiosk.com/api/v1/reader/publications/{publication}/issues/{issue}/signedurls"
 
-    # Cela correspond à l'export "spki" de la clé privée.
-    baseValue = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDzJYI8Xm+HyF0vn6qGZgM/AezQ2k9nIkyZBThhTOYWGQFDMloaSgP7JWzJOXJd0nu9TsFwV6jJAtth0hclC+KcXIgZF1ZKEr/p5F3xhMlkKDYwduLj5BmboUZ9zDlpzZyQpbm7JHQb/dwzfR5DkNPYbnHe7DAxaTKOiPfvAzevSwIDAQAB"
-    
+    # On génère une nouvelle clé RSA.
+    # priv_key = RSA.import_key(open('privatekey.pkcs8').read())
+    priv_key = RSA.generate(1024)
+    pub_key = priv_key.publickey().exportKey('PEM').decode("utf-8")
+    for e in ["-----BEGIN PUBLIC KEY-----", "-----END PUBLIC KEY-----", "\n"]:
+        pub_key = pub_key.replace(e, "")
+
+    baseValue = pub_key
+
     headers = {
         'authority': 'api.lekiosk.com',
         'pragma': 'no-cache',
@@ -224,7 +230,7 @@ if __name__ == "__main__":
 
     enc_session_key = base64.b64decode(mag_infos['baseValue'])
 
-    priv_key = RSA.import_key(open('privatekey.pkcs8').read())
+    
     cipher = PKCS1_OAEP.new(priv_key)
     cipher_dec = cipher.decrypt(enc_session_key)
 

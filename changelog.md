@@ -2,6 +2,9 @@
 
 ## cafeyn_get.py 
 
+### Version 0.04.0 (2020-10-18)
+- [CHANGE] Utilisation d'une nouvelle clé RSA à chaque appel. 
+
 ### Version 0.03.1 (2020-10-09)
 - [NEW] Si aucune URL passée en paramètre, on la demande. Cela permet d'exécuter le programme sans passer par une ligne de commande. 
 - [NEW] Avertissement quand la publication n'est pas dans l'abonnement. 
