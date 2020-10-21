@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-__version__ = "0.05.0"
+__version__ = "0.06.0"
 """
 Source : https://github.com/izneo-get/izneo-get
 
-usage: cafeyn_get.py [-h] [--no-clean] [--output-folder OUTPUT_FOLDER]
-                     [--config CONFIG] [--user-agent USER_AGENT]
-                     url
+usage: cafeyn_get.py [-h] [--no-clean] [--no-bookmark]
+                     [--output-folder OUTPUT_FOLDER] [--config CONFIG]
+                     [--user-agent USER_AGENT] [--force]
+                     [url]
 
 Script pour sauvegarder une publication Cafeyn.
 
@@ -17,11 +18,13 @@ optional arguments:
   -h, --help            show this help message and exit
   --no-clean            Ne supprime pas le répertoire temporaire dans le cas
                         où un PDF a été généré
+  --no-bookmark         Ne met pas à jour le statut "lu" de la publication
   --output-folder OUTPUT_FOLDER, -o OUTPUT_FOLDER
                         Répertoire racine de téléchargement
   --config CONFIG       Fichier de configuration
   --user-agent USER_AGENT
                         User agent à utiliser
+  --force               Ne demande pas la confirmation d'écrasement de fichier
 """
 
 import requests
@@ -47,6 +50,7 @@ import math
 from PyPDF2 import PdfFileMerger
 import os.path
 from os import path
+
 
 def requests_retry_session(
     retries=3,
@@ -89,6 +93,7 @@ def clean_name(name):
     name = re.sub(r"\.+$", "", name)
     return name
 
+
 if __name__ == "__main__":
     # Parse des arguments passés en ligne de commande.
     parser = argparse.ArgumentParser(
@@ -108,6 +113,12 @@ if __name__ == "__main__":
         help="Ne supprime pas le répertoire temporaire dans le cas où un PDF a été généré",
     )
     parser.add_argument(
+        "--no-bookmark",
+        action="store_true",
+        default=False,
+        help="Ne met pas à jour le statut \"lu\" de la publication",
+    )
+    parser.add_argument(
         "--output-folder",
         "-o",
         type=str,
@@ -121,13 +132,16 @@ if __name__ == "__main__":
         "--user-agent", type=str, default=None, help="User agent à utiliser"
     )
     parser.add_argument(
-        "--force", action="store_true", default=False, help="Ne demande pas la confirmation d'écrasement de fichier"
+        "--force",
+        action="store_true",
+        default=False,
+        help="Ne demande pas la confirmation d'écrasement de fichier",
     )
 
     args = parser.parse_args()
     no_clean = args.no_clean
+    no_bookmark = args.no_bookmark
     force_overwrite = args.force
-
 
     # Lecture de la config.
     config = configparser.RawConfigParser()
@@ -164,23 +178,26 @@ if __name__ == "__main__":
     cafeyn_userGroup = get_param_or_default(config, "cafeyn_userGroup", "")
 
     base_url = args.url
-    while base_url.upper() != "Q" and not re.match("https://reader.cafeyn.co/fr/(.+?)/(.+?)", base_url):
-        base_url = input("URL de la publication au format \"https://reader.cafeyn.co/fr/{publicationId}/{issueId}\" (\"Q\" pour quitter) : ")
+    while base_url.upper() != "Q" and not re.match(
+        "https://reader.cafeyn.co/fr/(.+?)/(.+?)", base_url
+    ):
+        base_url = input(
+            'URL de la publication au format "https://reader.cafeyn.co/fr/{publicationId}/{issueId}" ("Q" pour quitter) : '
+        )
 
     if base_url.upper() == "Q":
         sys.exit()
 
     if not cafeyn_authtoken or not cafeyn_webSessionId or not cafeyn_userGroup:
         print("[ERREUR] Impossible de trouver les valeurs dans la configuration.")
-        print(f"cafeyn_authtoken = \"{cafeyn_authtoken}\"")
-        print(f"cafeyn_webSessionId = \"{cafeyn_webSessionId}\"")
-        print(f"cafeyn_userGroup = \"{cafeyn_userGroup}\"")
+        print(f'cafeyn_authtoken = "{cafeyn_authtoken}"')
+        print(f'cafeyn_webSessionId = "{cafeyn_webSessionId}"')
+        print(f'cafeyn_userGroup = "{cafeyn_userGroup}"')
 
     if not user_agent:
-        user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36'
+        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36"
     s = requests.Session()
-    
-    
+
     publication = re.match("https://reader.cafeyn.co/fr/(.+?)/(.+?)", base_url)[1]
     issue = re.match("https://reader.cafeyn.co/fr/(.+?)/(.+)", base_url)[2]
 
@@ -189,125 +206,131 @@ if __name__ == "__main__":
     # On génère une nouvelle clé RSA.
     # priv_key = RSA.import_key(open('privatekey.pkcs8').read())
     priv_key = RSA.generate(1024)
-    pub_key = priv_key.publickey().exportKey('PEM').decode("utf-8")
+    pub_key = priv_key.publickey().exportKey("PEM").decode("utf-8")
     for e in ["-----BEGIN PUBLIC KEY-----", "-----END PUBLIC KEY-----", "\n"]:
         pub_key = pub_key.replace(e, "")
 
     baseValue = pub_key
 
     headers = {
-        'authority': 'api.lekiosk.com',
-        'pragma': 'no-cache',
-        'cache-control': 'no-cache',
-        'accept': f"accesskeyid:123456;isretina:false;appversion:5.0.0;content-type:application/json;cookieprefix:Cafeyn_;appId:canal;webSessionId:{cafeyn_webSessionId};authtoken:{cafeyn_authtoken};baseValue:{baseValue}",
-        'user-agent': user_agent,
-        'x-usergroup': cafeyn_userGroup,
-        'origin': 'https://reader.cafeyn.co',
-        'sec-fetch-site': 'cross-site',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-dest': 'empty',
-        'referer': 'https://reader.cafeyn.co/',
-        'accept-language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
-        'dnt': '1',
+        "authority": "api.lekiosk.com",
+        "pragma": "no-cache",
+        "cache-control": "no-cache",
+        "accept": f"accesskeyid:123456;isretina:false;appversion:5.0.0;content-type:application/json;cookieprefix:Cafeyn_;appId:canal;webSessionId:{cafeyn_webSessionId};authtoken:{cafeyn_authtoken};baseValue:{baseValue}",
+        "user-agent": user_agent,
+        "x-usergroup": cafeyn_userGroup,
+        "origin": "https://reader.cafeyn.co",
+        "sec-fetch-site": "cross-site",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-dest": "empty",
+        "referer": "https://reader.cafeyn.co/",
+        "accept-language": "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7",
+        "dnt": "1",
     }
 
     timestamp = math.floor(datetime.timestamp(datetime.now()))
-    params = (
-        ('timestamp', f"{timestamp}000"),
-    )
+    params = (("timestamp", f"{timestamp}000"),)
 
     r = requests_retry_session(session=s).get(
-            mag_infos_url,
-            # cookies=s.cookies,
-            allow_redirects=True,
-            headers=headers,
-            params=params
+        mag_infos_url,
+        # cookies=s.cookies,
+        allow_redirects=True,
+        headers=headers,
+        params=params,
+    )
+    mag_infos = json.loads(r.text)["result"]
+
+    if mag_infos["isPurchased"] == False:
+        print(
+            "[WARNING] Cette publication n'est pas disponible dans votre abonnement. Vous n'aurez que les pages gratuites. "
         )
-    mag_infos = json.loads(r.text)['result']
 
-    if mag_infos['isPurchased'] == False:
-        print("[WARNING] Cette publication n'est pas disponible dans votre abonnement. Vous n'aurez que les pages gratuites. ")
+    enc_session_key = base64.b64decode(mag_infos["baseValue"])
 
-    enc_session_key = base64.b64decode(mag_infos['baseValue'])
-
-    
     cipher = PKCS1_OAEP.new(priv_key)
     cipher_dec = cipher.decrypt(enc_session_key)
 
-
-    title = clean_name(mag_infos['title'])
-    issueNumber = clean_name(str(mag_infos['issueNumber']))
-    releaseDate = clean_name(str(mag_infos['releaseDate']))
+    title = clean_name(mag_infos["title"])
+    issueNumber = clean_name(str(mag_infos["issueNumber"]))
+    releaseDate = clean_name(str(mag_infos["releaseDate"]))
     if len(releaseDate) > 10:
-        releaseDate = ' (' + releaseDate[0:10] + ')'
+        releaseDate = " (" + releaseDate[0:10] + ")"
     else:
-        releaseDate = ''
+        releaseDate = ""
 
-    full_pdf_path = output_folder + "/" + clean_name(title + ' ' + issueNumber + releaseDate) + ".pdf"
+    full_pdf_path = (
+        output_folder
+        + "/"
+        + clean_name(title + " " + issueNumber + releaseDate)
+        + ".pdf"
+    )
 
     answer = ""
     if force_overwrite:
         answer = "O"
     while path.exists(full_pdf_path) and answer not in ["O", "Y", "N", "Q"]:
-        answer = input(f"Le fichier de destination \"{full_pdf_path}\" existe déjà. Voulez-vous l'écraser ? [O]ui / [N]on : ").upper()
+        answer = input(
+            f'Le fichier de destination "{full_pdf_path}" existe déjà. Voulez-vous l\'écraser ? [O]ui / [N]on : '
+        ).upper()
 
     if answer.upper() in ["N", "Q"]:
         sys.exit()
 
     done = 0
-    total = len(mag_infos['signedUrls'])
+    total = len(mag_infos["signedUrls"])
     print(f"[{done} / {total}]", end="\r", flush=True)
-    for page in mag_infos['signedUrls']:
+    max_page = 0
+    for page in mag_infos["signedUrls"]:
         r = requests_retry_session(session=s).get(
-            mag_infos['signedUrls'][page]['pdfUrl'],
+            mag_infos["signedUrls"][page]["pdfUrl"],
             # cookies=s.cookies,
             allow_redirects=True,
-            headers=headers
+            headers=headers,
         )
         if r.status_code != 200:
             print(f"Impossible de récupérer la page {page}")
             break
-        page_str = ('000' + page)[-3:]
+        page_str = ("000" + page)[-3:]
         # f = open(f"{title} {issueNumber} - {page_str}.bin", "wb")
         # f.write(r.content)
         # f.close()
-        
-        save_path = output_folder + "/" + title + '_' + issueNumber
+
+        save_path = output_folder + "/" + title + "_" + issueNumber
         if not os.path.exists(save_path):
             os.mkdir(save_path)
-        
+
         if re.fullmatch(r"^[0-9a-fA-F]+$", cipher_dec.decode()) is not None:
             # Nouveau format
-            e = mag_infos["issueId"] * ord('#')
-            t = mag_infos["publicationId"] * ord('*')
-            b = (hex(t)[2:].upper() + '00000000000')[0:10]
-            a = (hex(e)[2:].upper() + '00000000000')[0:10]
+            e = mag_infos["issueId"] * ord("#")
+            t = mag_infos["publicationId"] * ord("*")
+            b = (hex(t)[2:].upper() + "00000000000")[0:10]
+            a = (hex(e)[2:].upper() + "00000000000")[0:10]
             key = b + cipher_dec.decode() + a
             iv = key[0:16]
         else:
             # Ancien format
-            key = (str(mag_infos["issueId"]) + '-' + page + cipher_dec.decode())[0:16]
+            key = (str(mag_infos["issueId"]) + "-" + page + cipher_dec.decode())[0:16]
             # iv = ''
             # for k in key:
             #     iv = iv + hex(ord(k))[2:]
             iv = key
 
-        key = key.encode('utf-8')
-        iv = iv.encode('utf-8')
-
+        key = key.encode("utf-8")
+        iv = iv.encode("utf-8")
 
         aes = AES.new(key, AES.MODE_CBC, iv)
-        #decrypted_content = aes.decrypt(r.content)
+        # decrypted_content = aes.decrypt(r.content)
         decrypted_content = Padding.unpad(aes.decrypt(r.content), AES.block_size)
 
         f = open(f"{save_path}/{title} {issueNumber} - {page_str}.pdf", "wb")
         f.write(decrypted_content)
         f.close()
         done = done + 1
+        max_page = int(page) if int(page) > max_page else max_page
         print(f"[{done} / {total}]", end="\r", flush=True)
 
     print("\nCompilation du PDF...")
-    
+
     pdfs = []
     for fname in os.listdir(save_path):
         if not fname.endswith(".pdf"):
@@ -325,4 +348,43 @@ if __name__ == "__main__":
 
     if not no_clean:
         shutil.rmtree(save_path)
+
+    # On indique à Cafeyn que le magazine est lu.
+    if not no_bookmark:
+        print("Mise à jour du bookmark...")
+        headers = {
+            "authority": "api.lekiosk.com",
+            "pragma": "no-cache",
+            "cache-control": "no-cache",
+            "accept": f"accesskeyid:123456;isretina:false;appversion:5.0.0;content-type:application/json;cookieprefix:Cafeyn_;appId:canal;webSessionId:{cafeyn_webSessionId};authtoken:{cafeyn_authtoken};baseValue:{baseValue}",
+            "user-agent": user_agent,
+            "x-usergroup": cafeyn_userGroup,
+            'content-type': 'application/json;charset=UTF-8',
+            "origin": "https://reader.cafeyn.co",
+            "sec-fetch-site": "cross-site",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-dest": "empty",
+            "referer": "https://reader.cafeyn.co/",
+            "accept-language": "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7",
+            "dnt": "1",
+        }
+
+        data = (
+            '[{"issueId":'
+            + str(mag_infos["issueId"])
+            + ',"lastReadPage":'
+            + str(max_page)
+            + ',"lastReadMode":0}]'
+        )
+        r = requests_retry_session(session=s).put(
+            "https://api.lekiosk.com/api/v1/users/me/readings/issues",
+            # cookies=s.cookies,
+            allow_redirects=True,
+            headers=headers,
+            params=params,
+            data=data,
+        )
+        if r.status_code != 200:
+            print("[WARNING] Impossible de mettre à jour le marque page.")
+
     print("Terminé !")

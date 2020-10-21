@@ -10,9 +10,10 @@ Il est évident que les fichiers ne doivent en aucun cas être conservées une f
 ### cafeyn_get
 **Utilisation**  
 ```
-python cafeyn_get.py [-h] [--no-clean] [--output-folder OUTPUT_FOLDER]
-                     [--config CONFIG] [--user-agent USER_AGENT]
-                     url
+cafeyn_get.py [-h] [--no-clean] [--no-bookmark]
+                     [--output-folder OUTPUT_FOLDER] [--config CONFIG]
+                     [--user-agent USER_AGENT] [--force]
+                     [url]
 
 Script pour sauvegarder une publication Cafeyn.
 
@@ -23,17 +24,19 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   --no-clean            Ne supprime pas le répertoire temporaire dans le cas
-                        où un PDF a été généré.
+                        où un PDF a été généré
+  --no-bookmark         Ne met pas à jour le statut "lu" de la publication
   --output-folder OUTPUT_FOLDER, -o OUTPUT_FOLDER
                         Répertoire racine de téléchargement
   --config CONFIG       Fichier de configuration
   --user-agent USER_AGENT
                         User agent à utiliser
+  --force               Ne demande pas la confirmation d'écrasement de fichier
 ```
 
 - L'URL doit ressembler à :
 ```
-https://reader.cafeyn.co/fr/{identifiant_numero}/{identifiant_journal}
+https://reader.cafeyn.co/fr/{identifiant_journal}/{identifiant_numero}
 ``` 
 
 - Il est impératif d'avoir un fichier de configuration "cafeyn_get.cfg" dans lequel les 3 variables de cookies sont renseignées : 

@@ -2,6 +2,10 @@
 
 ## cafeyn_get.py 
 
+### Version 0.06.0 (2020-10-21)
+- [NEW] Mise à jour du bookmark pour passer la publication en "lu". 
+- [NEW] Ajout du paramètre "--no-bookmark" pour ne pas mettre à jour le bookmark. 
+
 ### Version 0.05.0 (2020-10-18)
 - [NEW] Compatibilité avec les anciennes publications. 
 
