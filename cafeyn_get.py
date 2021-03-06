@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = "0.06.0"
+__version__ = "0.06.1"
 """
 Source : https://github.com/izneo-get/izneo-get
 
@@ -50,6 +50,7 @@ import math
 from PyPDF2 import PdfFileMerger
 import os.path
 from os import path
+import time
 
 
 def requests_retry_session(
@@ -137,11 +138,20 @@ if __name__ == "__main__":
         default=False,
         help="Ne demande pas la confirmation d'écrasement de fichier",
     )
+    parser.add_argument(
+        "--pause",
+        "-p",
+        type=float,
+        metavar="SECONDS",
+        default=0,
+        help="Faire une pause (en secondes) entre chaque page",
+    )
 
     args = parser.parse_args()
     no_clean = args.no_clean
     no_bookmark = args.no_bookmark
     force_overwrite = args.force
+    pause_sec = args.pause
 
     # Lecture de la config.
     config = configparser.RawConfigParser()
@@ -328,6 +338,7 @@ if __name__ == "__main__":
         done = done + 1
         max_page = int(page) if int(page) > max_page else max_page
         print(f"[{done} / {total}]", end="\r", flush=True)
+        time.sleep(pause_sec)
 
     print("\nCompilation du PDF...")
 

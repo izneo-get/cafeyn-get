@@ -10,21 +10,19 @@ Il est évident que les fichiers ne doivent en aucun cas être conservées une f
 ### cafeyn_get
 **Utilisation**  
 ```
-cafeyn_get.py [-h] [--no-clean] [--no-bookmark]
-                     [--output-folder OUTPUT_FOLDER] [--config CONFIG]
-                     [--user-agent USER_AGENT] [--force]
+usage: cafeyn_get.py [-h] [--no-clean] [--no-bookmark] [--output-folder OUTPUT_FOLDER] [--config CONFIG]
+                     [--user-agent USER_AGENT] [--force] [--pause SECONDS]
                      [url]
 
 Script pour sauvegarder une publication Cafeyn.
 
 positional arguments:
-  url                   L'URL de la publication à récupérer ou le chemin vers
-                        un fichier local contenant une liste d'URLs
+  url                   L'URL de la publication à récupérer ou le chemin vers un fichier local contenant une liste
+                        d'URLs
 
 optional arguments:
   -h, --help            show this help message and exit
-  --no-clean            Ne supprime pas le répertoire temporaire dans le cas
-                        où un PDF a été généré
+  --no-clean            Ne supprime pas le répertoire temporaire dans le cas où un PDF a été généré
   --no-bookmark         Ne met pas à jour le statut "lu" de la publication
   --output-folder OUTPUT_FOLDER, -o OUTPUT_FOLDER
                         Répertoire racine de téléchargement
@@ -32,6 +30,8 @@ optional arguments:
   --user-agent USER_AGENT
                         User agent à utiliser
   --force               Ne demande pas la confirmation d'écrasement de fichier
+  --pause SECONDS, -p SECONDS
+                        Faire une pause (en secondes) entre chaque page
 ```
 
 - L'URL doit ressembler à :

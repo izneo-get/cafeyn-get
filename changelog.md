@@ -2,6 +2,9 @@
 
 ## cafeyn_get.py 
 
+### Version 0.06.1 (2021-03-06)
+- [NEW] Ajout de l'option `--pause SECONDS` qui permet de faire une pause entre chaque récupération de page. 
+
 ### Version 0.06.0 (2020-10-21)
 - [NEW] Mise à jour du bookmark pour passer la publication en "lu". 
 - [NEW] Ajout du paramètre "--no-bookmark" pour ne pas mettre à jour le bookmark. 
