@@ -2,6 +2,9 @@
 
 ## cafeyn_get.py 
 
+### Version 0.06.2 (2021-03-07)
+- [CHANGE] L'URL peut contenir un autre code pays que "fr". 
+
 ### Version 0.06.1 (2021-03-06)
 - [NEW] Ajout de l'option `--pause SECONDS` qui permet de faire une pause entre chaque récupération de page. 
 

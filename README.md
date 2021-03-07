@@ -36,7 +36,7 @@ optional arguments:
 
 - L'URL doit ressembler à :
 ```
-https://reader.cafeyn.co/fr/{identifiant_journal}/{identifiant_numero}
+https://reader.cafeyn.co/{pays}/{identifiant_journal}/{identifiant_numero}
 ``` 
 
 - Il est impératif d'avoir un fichier de configuration "cafeyn_get.cfg" dans lequel les 3 variables de cookies sont renseignées : 

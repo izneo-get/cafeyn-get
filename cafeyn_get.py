@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = "0.06.1"
+__version__ = "0.06.2"
 """
 Source : https://github.com/izneo-get/izneo-get
 
@@ -189,10 +189,10 @@ if __name__ == "__main__":
 
     base_url = args.url
     while base_url.upper() != "Q" and not re.match(
-        "https://reader.cafeyn.co/fr/(.+?)/(.+?)", base_url
+        "https://reader.cafeyn.co/(.+?)/(.+?)/(.+)", base_url
     ):
         base_url = input(
-            'URL de la publication au format "https://reader.cafeyn.co/fr/{publicationId}/{issueId}" ("Q" pour quitter) : '
+            'URL de la publication au format "https://reader.cafeyn.co/{pays}/{publicationId}/{issueId}" ("Q" pour quitter) : '
         )
 
     if base_url.upper() == "Q":
@@ -208,8 +208,7 @@ if __name__ == "__main__":
         user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36"
     s = requests.Session()
 
-    publication = re.match("https://reader.cafeyn.co/fr/(.+?)/(.+?)", base_url)[1]
-    issue = re.match("https://reader.cafeyn.co/fr/(.+?)/(.+)", base_url)[2]
+    _, publication, issue = re.match("https://reader.cafeyn.co/(.+?)/(.+?)/(.+)", base_url).groups()
 
     mag_infos_url = f"https://api.lekiosk.com/api/v1/reader/publications/{publication}/issues/{issue}/signedurls"
 
