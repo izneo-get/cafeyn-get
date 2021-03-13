@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = "0.06.2"
+__version__ = "0.06.3"
 """
 Source : https://github.com/izneo-get/izneo-get
 
@@ -38,7 +38,7 @@ import argparse
 import configparser
 import shutil
 import time
-from bs4 import BeautifulSoup
+# from bs4 import BeautifulSoup
 from PIL import Image
 import json
 from Crypto.PublicKey import RSA
@@ -94,6 +94,19 @@ def clean_name(name):
     name = re.sub(r"\.+$", "", name)
     return name
 
+def check_version():
+    latest_version_url = 'https://raw.githubusercontent.com/izneo-get/cafeyn-get/master/VERSION'
+    res = requests.get(latest_version_url)
+    if res.status_code != 200:
+        print(f"Version {__version__} (impossible to check official version)")
+    else:
+        latest_version = res.text.strip()
+        if latest_version == __version__:
+            print(f"Version {__version__} (official version)")
+        else:
+            print(f"Version {__version__} (official version is different: {latest_version})")
+            print("Please check https://github.com/izneo-get/cafeyn-get/releases/latest")
+    print()
 
 if __name__ == "__main__":
     # Parse des arguments passés en ligne de commande.
@@ -146,6 +159,9 @@ if __name__ == "__main__":
         default=0,
         help="Faire une pause (en secondes) entre chaque page",
     )
+
+    # Vérification que c'est la dernière version.
+    check_version() 
 
     args = parser.parse_args()
     no_clean = args.no_clean
@@ -290,6 +306,18 @@ if __name__ == "__main__":
     print(f"[{done} / {total}]", end="\r", flush=True)
     max_page = 0
     for page in mag_infos["signedUrls"]:
+        headers = {
+            'User-Agent': user_agent,
+            'Accept': 'application/json, text/plain, */*',
+            'Accept-Language': 'fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3',
+            'AppId': 'lk',
+            'Origin': 'https://reader.cafeyn.co',
+            'Connection': 'keep-alive',
+            'Referer': base_url,
+            'Pragma': 'no-cache',
+            'Cache-Control': 'no-cache',
+            'TE': 'Trailers',
+            }
         r = requests_retry_session(session=s).get(
             mag_infos["signedUrls"][page]["pdfUrl"],
             # cookies=s.cookies,
@@ -374,7 +402,7 @@ if __name__ == "__main__":
             "sec-fetch-site": "cross-site",
             "sec-fetch-mode": "cors",
             "sec-fetch-dest": "empty",
-            "referer": "https://reader.cafeyn.co/",
+            "referer": base_url,
             "accept-language": "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7",
             "dnt": "1",
         }

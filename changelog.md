@@ -2,6 +2,10 @@
 
 ## cafeyn_get.py 
 
+### Version 0.06.3 (2021-03-13)
+- [BUGFIX] Adaptation à la nouvelle façon d'appeler les pages. 
+- [NEW] Vérification de la version au lancement de l'application. 
+
 ### Version 0.06.2 (2021-03-07)
 - [CHANGE] L'URL peut contenir un autre code pays que "fr". 
 
