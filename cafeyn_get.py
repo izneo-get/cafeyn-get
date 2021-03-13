@@ -1,30 +1,8 @@
 # -*- coding: utf-8 -*-
 __version__ = "0.06.3"
 """
-Source : https://github.com/izneo-get/izneo-get
-
-usage: cafeyn_get.py [-h] [--no-clean] [--no-bookmark]
-                     [--output-folder OUTPUT_FOLDER] [--config CONFIG]
-                     [--user-agent USER_AGENT] [--force]
-                     [url]
-
-Script pour sauvegarder une publication Cafeyn.
-
-positional arguments:
-  url                   L'URL de la publication à récupérer ou le chemin vers
-                        un fichier local contenant une liste d'URLs
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --no-clean            Ne supprime pas le répertoire temporaire dans le cas
-                        où un PDF a été généré
-  --no-bookmark         Ne met pas à jour le statut "lu" de la publication
-  --output-folder OUTPUT_FOLDER, -o OUTPUT_FOLDER
-                        Répertoire racine de téléchargement
-  --config CONFIG       Fichier de configuration
-  --user-agent USER_AGENT
-                        User agent à utiliser
-  --force               Ne demande pas la confirmation d'écrasement de fichier
+Source : https://github.com/izneo-get/cafeyn-get
+Date : 2021-03-13
 """
 
 import requests
